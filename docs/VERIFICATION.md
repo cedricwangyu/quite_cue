@@ -59,6 +59,14 @@ The requested delivery mode retains the Next.js and SQLite application for insta
 
 The new launcher passed all 18 local tests. Lint, type checking, and assertions for the general and Windows task configuration also passed. The production build and all 18 browser tests passed again, and the local production service still returned HTTP 200. An Ubuntu/Windows matrix was added to CI, but it has not yet run on a Windows runner or a teammate's Windows machine.
 
+## November 7 Assignment Increment
+
+Added two input-regression cases in tests/ranking.test.ts: canonical positive safe-integer IDs and the 100/101-character raw search boundary before trimming. Both passed without changing the existing validator. The focused file passed 11 tests; the complete suite now passes 20 tests, compared with 18 in the earlier baseline.
+
+Reran npm test (20 passed), npm run lint -- --max-warnings 0 (exit 0), npm run typecheck (exit 0), npm run build (success), npm run test:e2e (18 passed), npm audit (zero known vulnerabilities), and git diff --check (exit 0). These are technical gate results, not a claim of peer approval. Human second-member sign-off and exact mapping to the unavailable course checklist/SRS/ADR documents remain pending.
+
+The English assignment report source is submissions/QuietCue_Implementation_Increment_Review.html. Generate its PDF with node scripts/generate-review-report.mjs after installing Chromium with npx playwright install chromium. The report separates historical caught defects from controls verified in the current run and cites repository evidence.
+
 ## Unverified Items
 
 Remote GitHub CI, real-data authenticity, second-member human review, SRS test-ID mapping, formal load testing, a five-person usability study, real iOS/Safari testing, production HTTPS, and persistent-storage deployment remain unverified. CI is configured, but no push or successful remote execution is claimed. No commit or branch was created.

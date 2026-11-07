@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseFilters, InputError } from "../src/lib/input.ts";
+import { parseFilters, parseId, InputError } from "../src/lib/input.ts";
 import { isOutdated } from "../src/lib/freshness.ts";
 import { rankWorkspaces, scoreWorkspace } from "../src/lib/ranking.ts";
 import type { Workspace } from "../src/lib/model.ts";
@@ -44,4 +44,19 @@ test("freshness calendar boundary: 90 days fresh, 91 stale; unknown remains unkn
   assert.equal(isOutdated("2026-08-08", now), false);
   assert.equal(isOutdated("2026-08-07", now), true);
   assert.equal(isOutdated(null, now), false);
+});
+
+test("workspace IDs require canonical positive safe integers", () => {
+  assert.equal(parseId("1"), 1);
+  assert.equal(parseId(String(Number.MAX_SAFE_INTEGER)), Number.MAX_SAFE_INTEGER);
+  for (const value of ["", "0", "-1", "01", "+1", "1.0", "1e3", " 1 ", "1 OR 1=1", "9007199254740992"]) {
+    assert.throws(() => parseId(value), InputError);
+  }
+});
+
+test("search length is validated before trimming whitespace", () => {
+  const accepted = ` ${"a".repeat(98)} `;
+  const rejected = ` ${"a".repeat(99)} `;
+  assert.equal(parseFilters(new URLSearchParams({ search: accepted })).search, "a".repeat(98));
+  assert.throws(() => parseFilters(new URLSearchParams({ search: rejected })), InputError);
 });
