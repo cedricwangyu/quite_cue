@@ -1,0 +1,23 @@
+[
+  {
+    "id": 101,
+    "name": "REPLACE with actual venue name",
+    "category": "Library",
+    "area": "REPLACE with actual area",
+    "address": "REPLACE with actual address",
+    "description": null,
+    "noise_level": null,
+    "wifi": null,
+    "outlets": null,
+    "group_friendly": null,
+    "cost_band": null,
+    "opening_hours": null,
+    "collection_method": null,
+    "source_note": null,
+    "observation_ref": null,
+    "source_url": null,
+    "last_verified_date": null,
+    "published": 0,
+    "is_demo": 0
+  }
+]

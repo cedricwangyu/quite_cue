@@ -1,0 +1,20 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Quiet Cue: Run V0.1",
+			"type": "shell",
+			"command": "npm",
+			"args": ["run", "start", "--", "--hostname", "127.0.0.1", "--port", "3000"],
+			"options": { "cwd": "${workspaceFolder}" },
+			"windows": { "command": "npm.cmd" },
+			"osx": {
+				"options": {
+					"env": { "PATH": "${env:HOME}/.local/share/quiet-cue/node-v22.23.4-darwin-arm64/bin:${env:PATH}" }
+				}
+			},
+			"isBackground": true,
+			"problemMatcher": []
+		}
+	]
+}
