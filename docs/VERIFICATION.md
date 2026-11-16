@@ -1,4 +1,36 @@
-# V0.1 Verification Record
+# Quiet Cue Verification Record
+
+## V0.2 Final Verification - 2026-11-16
+
+Executed locally on macOS arm64 with Node 22.23.4. All current application workspaces and feedback are Synthetic; no real collection or human evidence review is claimed.
+
+| Check | Actual result |
+| --- | --- |
+| npm ci | Passed; duplicate local dependency directories removed by clean installation |
+| npm run db:demo | Passed; 12 fictional workspaces (11 public) and 366 Synthetic feedback rows |
+| npm run typecheck | Passed, including a clean regenerated Next route-type cache |
+| npm run lint | Passed |
+| npm test | 45 passed, 0 failed |
+| npm run test:e2e | 28 passed, 0 failed: 14 cases each on desktop/mobile-sized Chromium |
+| npm run build | Production build passed, including the noise-estimate route |
+| npm audit | 0 known vulnerabilities, including development dependencies |
+| npm run db:audit | 0 public real records; expected for this Synthetic-only release |
+| git diff --check | Passed |
+| Dedicated SAST | Not executed: no configured SAST workflow and no local Semgrep/CodeQL executable |
+
+The final full typecheck, lint, Node tests, browser tests, build and dependency audit were rerun after the last test additions. ESLint and TypeScript are static code checks, not a claim of dedicated security scanning. The Node SQLite ExperimentalWarning is informational.
+
+New automated evidence includes ordinal mapping and exact mean thresholds; UTC day/period boundaries; all confidence count boundaries; empty/insufficient data; approved-only filtering; history-window endpoints; expired/future data exclusion; Synthetic/real source isolation; deterministic seeded generation; foreign keys; duplicate IDs/natural keys; strict imports; invalid/future timestamps; atomic rollback; protected real-data lifecycle; in-place V0.1 schema upgrade; and unchanged ranking tests.
+
+API tests exercise invalid IDs, unknown/duplicate/unsafe parameters, SQL injection-like input, unpublished/missing workspaces, generic database failures, read-only storage, and rejected public write methods. Browser tests compare displayed estimates and overview values with API calculations, cover insufficient samples, loading/error/retry, Synthetic labels, preserved search/task navigation, and delayed older responses after rapid period changes. Existing catalog SQL/XSS and search/filter/ranking flows remain covered. A separate read-only AI review reported no reproducible defect; this is not human approval or dedicated SAST evidence.
+
+Desktop and mobile full-page screenshots were captured and visually inspected. They show rendered illustrative images, readable environment attributes, period controls, calculated overview values, and historical/Synthetic notices; automated viewport checks found no horizontal overflow. Browser artifacts are under ignored test-results/. Mobile tests use Chromium emulation, not real iOS Safari.
+
+Initial focused E2E execution found a repeated-current-option Loading defect (7 passed, 1 failed). The control handlers were corrected and the same focused set passed 8/8. Final coverage later increased to 28 total browser tests with the rapid-response regression. Earlier typecheck failures came from local duplicated @types directories and generated .next files; clean dependency installation and regenerated route types resolved them without suppressing checks.
+
+Remote CI, Windows hardware, real-device Safari, load testing, usability studies, human PR review, and persistent production deployment remain unverified. Synthetic sample confidence is not validated prediction accuracy. No real data was collected, published, or represented as a user submission.
+
+## V0.1 Historical Verification
 
 ## Actual Execution Results
 

@@ -1,0 +1,13 @@
+[
+  {
+    "id": 10001,
+    "workspace_id": 301,
+    "noise_level": "Quiet",
+    "observed_at": "2026-01-14T09:00:00.000Z",
+    "submitted_at": "2026-01-14T09:01:00.000Z",
+    "source_type": "synthetic",
+    "is_synthetic": 1,
+    "review_status": "approved",
+    "source_reference": "Entirely fictional demonstration feedback for synthetic workspace 301. Times and noise are invented, not real collection or verification. Approved is a test review state, not evidence of authenticity."
+  }
+]

@@ -1,6 +1,6 @@
-# Quiet Cue V0.1
+# Quiet Cue V0.2
 
-Quiet Cue is a task-based study and workspace discovery platform developed by Software Engineering Group 6. V0.1 is a working course demonstration, not a claim that the verified real-world dataset has passed final acceptance.
+Quiet Cue is a task-based study and workspace discovery platform developed by Software Engineering Group 6. V0.2 is a working course demonstration using **Synthetic workspaces and Synthetic historical noise feedback only**. All current venue records and feedback are fictional. No real data collection, field investigation, source verification, or human evidence review has occurred; generated records must not be presented as such.
 
 ## Technology Stack
 
@@ -20,7 +20,11 @@ Quiet Cue is a task-based study and workspace discovery platform developed by So
 - Workspace details, provenance, Unknown values, and warnings for records older than 90 UTC calendar days.
 - URL-persisted filters and search restoration when returning from details, plus loading, empty, error, and retry states.
 - Parameterized SQL, safe React text rendering, strict enum validation, and read-only APIs.
-- Separate Demo seeding, transactional real-data imports, provenance validation, and dataset audits.
+- Separate Synthetic seeding, transactional workspace/feedback imports, provenance field validation, and dataset audits. Real-data import support is retained for a future workflow, not evidence of current collection.
+- Historical noise estimates on workspace details, with Weekday/Weekend and Morning/Afternoon/Evening controls, sample counts, count-based confidence, timestamps, loading/error/retry states, and a computed three-period overview.
+- A 90-day history window, approved-only feedback, Synthetic/real source isolation, and an explicit Insufficient Data state. Historical estimates do not change existing task scores or rankings.
+
+See [docs/NOISE_ESTIMATION.md](docs/NOISE_ESTIMATION.md) for calculation rules, the API contract, data constraints, and Synthetic lifecycle commands.
 
 ## Prerequisites
 
@@ -85,9 +89,15 @@ Open http://localhost:3000. To use another port:
 npm run dev -- --port 3001
 ```
 
-The default database is generated at `data/quiet-cue.sqlite` and is excluded from Git. Demo seeding is repeatable and replaces only records with `is_demo = 1`. It does not delete real records. ID conflicts roll back the entire transaction.
+The default database is generated at `data/quiet-cue.sqlite` and is excluded from Git. Demo seeding transactionally replaces workspaces with `is_demo = 1` and their Synthetic feedback. It does not delete real records. ID conflicts or restricted foreign-key dependencies roll back the entire transaction.
 
-The Demo dataset contains **11 public fictional workspaces and one unpublished test record**. Verification dates, real source URLs, and field-observation references are NULL. Photographs are illustrative, not actual photographs of the fictional venues.
+The default Demo dataset contains **12 Synthetic workspaces (11 public, one unpublished) and 366 Synthetic feedback records**. Each workspace has one pending and one rejected fixture, both excluded from estimates. Cloudberry (ID 10) has two approved samples per day-type/period bucket and intentionally shows Insufficient Data. Verification dates, real source URLs, and field-observation references are NULL. Photographs are illustrative, not actual photographs of the fictional venues.
+
+```sh
+npm run db:demo -- --seed 2101 --now 2026-11-16T12:00:00.000Z
+```
+
+Both flags are optional: seed defaults to `2101`, and the reference time defaults to the current time. Reproduction requires the same seed, reference date/time, and ordered workspace list. The PRNG uses 32-bit state; a seed alone does not freeze dates. Approved fixtures span roughly the preceding month. Fixed-date fixtures eventually age out of the 90-day window: rerun without `--now` for a current demonstration.
 
 Use the server-side environment variable `QUIET_CUE_DB_PATH` to select another database. Initialization, import, and server processes must use the same path. The variable has no `NEXT_PUBLIC_` prefix and is not sent to the browser. If the database has not been initialized or cannot be read, the UI displays `Results temporarily unavailable.`.
 
@@ -134,64 +144,75 @@ Browser tests automatically start a temporary development server on port **3100*
 
 The GitHub Actions configuration in `.github/workflows/ci.yml` runs the same checks on Ubuntu and Windows runners. Local macOS checks have been executed. Windows hardware and remote CI results must be verified after the team runs the application or pushes the repository; the configuration alone is not evidence of a pass.
 
-## Real Data Import
+V0.2 verification so far includes 44 passing Node tests and eight passing focused noise browser checks across desktop/mobile-sized Chromium. Full end-to-end verification is tracked separately in [docs/VERIFICATION.md](docs/VERIFICATION.md); no full-suite pass or total is asserted here while that verification is in progress.
 
-Use `data/real-records.template.json` as the import template. It is an unpublished draft, not a verified real-world record.
+## Internal Data Commands
 
-1. Collect real venue information through team field visits, public websites, and manual verification.
-2. Supply a JSON array containing every template field and unique positive integer IDs. Demo IDs are 1-12; starting real records at 101 is recommended.
-3. Use `1`, `0`, or `null` for `wifi`, `outlets`, and `group_friendly`. Use `null` for unknown noise, cost, dates, and other nullable fields. Do not replace Unknown with False.
-4. Set `is_demo` to `0`. Before publication, provide the name, category, area, address, description, collection method, source note, and actual verification date.
-5. Field Observation requires an observation reference. Online Source requires an HTTP(S) source URL. Both requires both references. Future dates, invalid enums, missing fields, and unsafe URLs are rejected.
-6. Have a second team member review the evidence before setting `published: 1` and importing through the CLI.
+All commands below are team-only CLI operations, not public submission endpoints. Use `npm.cmd` instead of `npm` in Windows PowerShell.
 
 ```sh
-npm run db:import -- path/to/team-records.json
+npm run db:import -- --synthetic data/synthetic-workspaces.template.json
+npm run db:feedback:import -- data/noise-feedback.template.json
+npm run db:synthetic -- --seed 2101
+npm run db:synthetic -- --clear
 npm run db:audit
 ```
 
-The CLI validates the entire input before starting a transaction. Duplicate IDs or conflicts with Demo IDs reject the import. Importing an existing real ID updates that real record. **This operation is for local team use only; there is no public write API.**
+The workspace template explicitly sets `is_demo: 1`; the feedback template explicitly sets `is_synthetic: 1` and `source_type: "synthetic"`. Import workspace 301 before its example feedback. The feedback template's fixed January timestamp illustrates the format and may be outside the history window; it is not fresh evidence. Feedback imports insert only, so repeating the same file fails on duplicate IDs or natural keys. Workspace imports atomically upsert matching-marker IDs without deleting referenced workspaces; duplicate batch IDs and opposite-marker conflicts reject the batch.
 
-The audit excludes Demo data and reports the number of public real records, category count, and known-value coverage across five environment fields. The exact SRS definition of the 80% threshold has not been supplied, so this coverage is a diagnostic metric, not formal acceptance evidence. Field validation cannot establish evidence authenticity automatically.
+`db:synthetic` regenerates Synthetic feedback only for the existing `is_demo = 1` workspace list; it does not recreate workspaces or change their fields. It replaces Synthetic feedback, including imported Synthetic feedback. Optional `--seed` and `--now` have the same meaning as in `db:demo`. `--clear` removes Synthetic feedback and Synthetic workspaces; real records are not deleted. Foreign-key `RESTRICT` prevents deletion when a retained feedback dependency exists and rolls back the operation.
+
+The legacy workspace marker `is_demo` is preserved and means Synthetic in V0.2. Feedback uses explicit `is_synthetic` and `source_type` fields. Imports enforce matching workspace/feedback markers, canonical UTC timestamps, and atomic rollback. Approved real feedback would additionally require `source_reference` and human evidence review; a reference passing validation does not establish authenticity.
+
+### Future Real-Data Format Only
+
+[data/real-records.template.json](data/real-records.template.json) remains an unpublished format example, not an actual collected record. A future, separately authorized workflow can use `npm run db:import -- path/to/team-records.json` with `is_demo: 0`. All schema fields and unique positive safe-integer IDs are required. Use `1`, `0`, or `null` for amenities; Unknown must not become False. Published real records require description, collection method, source note, and a non-future verification date. Field Observation requires `observation_ref`, Online Source requires an HTTP(S) URL without credentials, and Both requires both. Human evidence review must precede publication; none is claimed for this release.
+
+The audit excludes Synthetic workspaces and reports public real records, categories, and known-value coverage across five environment fields. This diagnostic is not V0.2 Synthetic-demo acceptance or authenticity evidence. The exact SRS definition of the 80% threshold has not been supplied.
 
 ## API
 
 ```text
 GET /api/workspaces?search=Willow&category=Library&noise=Quiet&wifi=true&task=Quiet%20Study
 GET /api/workspaces/1
+GET /api/workspaces/1/noise-estimate?dayType=Weekday&timePeriod=Morning
 ```
 
 Supported parameters are `search`, `category`, `noise`, `wifi`, `outlets`, `group`, `cost`, and `task`. Omit unused optional parameters; amenity filters accept only `true`. Invalid, duplicate, or unknown parameters return 400. Missing or unpublished records return 404, database read failures return 503, and POST, PUT, PATCH, and DELETE return 405.
+
+The noise endpoint accepts **only** `dayType` (`Weekday` or `Weekend`) and `timePeriod` (`Morning`, `Afternoon`, or `Evening`), defaulting to `Weekday` and `Morning` when omitted. It returns `{ estimate, overview, notices }` with `Cache-Control: no-store`; `overview` contains all three periods for the selected day type. Invalid IDs/enums, duplicate keys, and unknown keys return 400; missing/unpublished workspaces return 404; database failures return a generic 503 without paths, SQL, or feedback rows. The endpoint and estimation service are strictly read-only. There is no public feedback submission API.
 
 ## Project Structure
 
 ```text
 src/app/                 Pages, layouts, read-only API routes
-src/components/          Catalog controls, workspace cards, retry control
-src/lib/                 Shared types, input validation, ranking, freshness
-src/server/              SQLite schema/access, search, provenance validation, Demo
-scripts/                 Demo seed, real import, audit
-data/                    Unpublished real-record JSON template
+src/components/          Catalog, workspace cards, historical noise, retry controls
+src/lib/                 Shared types, validation, ranking, freshness, UTC buckets
+src/server/              SQLite, catalog, noise estimation, validation, Synthetic data
+scripts/                 Synthetic seed/lifecycle, workspace/feedback import, audit
+data/                    Synthetic templates and future real-record format template
 public/images/           Local illustrative category photos
 tests/                   Unit, database, API and import tests
 tests/browser/           Desktop/mobile workflows
-docs/                    Architecture, verification and AI correction record
+docs/                    Architecture, noise estimation, verification, AI corrections
 .github/workflows/       CI configuration
 ```
 
 ## Known Limitations
 
-- There are currently **zero** verified public real-world records. The formal target of 20 records across at least three categories has not been reached.
+- All current workspace and feedback data are Synthetic. Real-world dataset size and coverage targets, including the earlier 20-record target, are future considerations, not V0.2 acceptance gaps or a request to collect data.
 - The repository SPMP was reviewed, but SRS v2.0 and the original ADR-001 were not supplied. Scoring follows the development request; the implementation architecture notes do not replace or formally approve the original ADR.
 - Formal load testing, a five-person usability study, human PR review, real-device Safari testing, and remote deployment have not been performed.
+- No dedicated SAST workflow is configured; Semgrep and CodeQL are not installed locally. ESLint and dependency auditing are not substitutes for SAST. No Windows hardware or remote CI pass is claimed.
+- Historical estimates use exact UTC buckets and a simple ordinal mean, not live monitoring or ML. Confidence labels describe sample counts, not measured predictive accuracy; fixed fixtures age out.
 - Full-catalog loading and synchronous SQLite suit a small course demonstration. Pagination is not implemented, and no performance target is claimed.
 - Google Fonts is an optional external request. Offline use falls back to installed fonts; core data and images are local.
 - All venue images illustrate categories. They do not represent actual venue photographs, including for future imported records.
 
 ## Future Improvements
 
-Prioritize collecting and reviewing real records, completing SRS test-ID mapping, obtaining human review and usability/load evidence, and validating a persistent SQLite deployment. Moderated user feedback belongs to a later release. Accounts, maps, live monitoring, reservations, and generative-AI recommendations are outside V0.1 scope.
+Complete SRS test-ID mapping, obtain actual human review and usability/load evidence, and validate a persistent SQLite deployment and cross-platform execution. Real-data collection and moderated public feedback are future, separately authorized work, not part of V0.2. Accounts, maps, live monitoring, reservations, and generative-AI recommendations remain out of scope.
 
 ## Visual Assets
 
-Illustrative photographs are from Unsplash. Their URLs and intended use are documented in `public/images/SOURCES.md`. No photograph is treated as field-observation evidence.
+Illustrative photographs are from Unsplash. Their URLs and intended use are documented in [public/images/SOURCES.md](public/images/SOURCES.md). No photograph is treated as field-observation evidence.

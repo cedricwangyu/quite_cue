@@ -3,12 +3,20 @@ import { validDate } from "../lib/freshness.ts";
 import { columns } from "./schema.ts";
 
 export function validateRealRecord(input: unknown, now = new Date()): Workspace {
+  return validateRecord(input, 0, now);
+}
+
+export function validateSyntheticRecord(input: unknown, now = new Date()): Workspace {
+  return validateRecord(input, 1, now);
+}
+
+function validateRecord(input: unknown, marker: 0 | 1, now: Date): Workspace {
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Record must be an object.");
   const record = input as Record<string, unknown>;
   for (const key of Object.keys(record)) if (!(columns as readonly string[]).includes(key)) throw new Error(`Unknown field: ${key}.`);
   for (const key of columns) if (!(key in record)) throw new Error(`Missing field: ${key}.`);
   if (!Number.isSafeInteger(record.id) || (record.id as number) < 1) throw new Error("Invalid ID.");
-  if (record.is_demo !== 0) throw new Error("Real import cannot contain Demo Data.");
+  if (record.is_demo !== marker) throw new Error(marker === 0 ? "Real import cannot contain Demo Data." : "Synthetic import requires explicit is_demo = 1.");
   if (record.published !== 0 && record.published !== 1) throw new Error("Invalid published flag.");
   for (const key of ["name", "area", "address"] as const) {
     if (typeof record[key] !== "string" || !(record[key] as string).trim() || (record[key] as string).length > 300) throw new Error(`Invalid ${key}.`);
@@ -26,7 +34,7 @@ export function validateRealRecord(input: unknown, now = new Date()): Workspace 
     if (!["https:", "http:"].includes(url.protocol) || url.username || url.password) throw new Error("Source URL must be HTTP(S), without credentials.");
   }
   if (record.last_verified_date !== null && (!validDate(record.last_verified_date as string) || (record.last_verified_date as string) > now.toISOString().slice(0, 10))) throw new Error("Invalid or future verification date.");
-  if (record.published === 1) {
+  if (record.published === 1 && marker === 0) {
     if (!record.description || !record.collection_method || !record.source_note || !record.last_verified_date) throw new Error("Published records require description, collection method, source note and verification date.");
     if ((record.collection_method === "Field Observation" || record.collection_method === "Both") && !record.observation_ref) throw new Error("Field observations require an observation reference.");
     if ((record.collection_method === "Online Source" || record.collection_method === "Both") && !record.source_url) throw new Error("Online sources require a source URL.");

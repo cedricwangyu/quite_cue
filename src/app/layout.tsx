@@ -9,10 +9,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return <html lang="en"><body>
     <a className="skip-link" href="#main">Skip to content</a>
     <header className="header"><div className="header-inner">
-      <Link href="/" className="brand" aria-label="Quiet Cue home"><span className="brand-icon"><AudioLines size={23} /></span>Quiet Cue<span className="version">V0.1</span></Link>
+      <Link href="/" className="brand" aria-label="Quiet Cue home"><span className="brand-icon"><AudioLines size={23} /></span>Quiet Cue<span className="version">V0.2</span></Link>
       <div className="header-right"><span className="project-label">GROUP 6 / WORKSPACE DISCOVERY</span><Link className="catalog-link" href="/">Explore spaces <ArrowUpRight size={16} /></Link></div>
     </div></header>
     {children}
-    <footer className="footer"><span>Quiet Cue · Software Engineering Group 6</span><span>Collected information, not live noise or occupancy.</span></footer>
+    <footer className="footer"><span>Quiet Cue · Software Engineering Group 6</span><span>Historical estimates, not real-time measurements.</span></footer>
   </body></html>;
 }

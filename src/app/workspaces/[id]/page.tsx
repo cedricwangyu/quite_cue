@@ -8,6 +8,7 @@ import { availabilityLabel, type Workspace } from "../../../lib/model";
 import { isOutdated } from "../../../lib/freshness";
 import { categoryImages } from "../../../components/workspace-card";
 import { Retry } from "../../../components/retry";
+import { NoiseHistory } from "../../../components/noise-history";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -42,5 +43,6 @@ export default async function WorkspaceDetail({ params, searchParams }: { params
       <dl>{[["Collection method", workspace.collection_method], ["Source note", workspace.source_note], ["Observation reference", workspace.observation_ref], ["Last verified date", workspace.last_verified_date]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value ?? "Unknown"}</dd></div>)}<div><dt>Source URL</dt><dd>{sourceUrl ? <a href={sourceUrl} target="_blank" rel="noopener noreferrer">View source <ExternalLink size={14} /></a> : "Unknown"}</dd></div></dl>
       {isOutdated(workspace.last_verified_date) && <p className="stale-warning"><AlertCircle size={16} />May be outdated.</p>}<p className="source-footnote">Environment attributes describe collected observations, not real-time conditions.</p>
     </aside></div>
+    <NoiseHistory workspaceId={workspace.id} isSynthetic={workspace.is_demo === 1} />
   </main>;
 }

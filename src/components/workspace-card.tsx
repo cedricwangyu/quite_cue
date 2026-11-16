@@ -13,7 +13,7 @@ export function WorkspaceCard({ workspace, query, position }: { workspace: Ranke
   return <article className="workspace-card">
     <Link href={`/workspaces/${workspace.id}${query ? `?from=${encodeURIComponent(query)}` : ""}`} className="card-link" aria-label={`View ${workspace.name}`}>
       <div className="card-image"><Image src={categoryImages[workspace.category]} alt={`Illustrative ${workspace.category.toLowerCase()} interior, not this venue`} width={800} height={450} loading={position <= 3 ? "eager" : "lazy"} />
-        <span className="category-badge">{workspace.category}</span>{workspace.is_demo === 1 && <span className="demo-image-label">Demo Data · Illustrative photo</span>}
+        <span className="category-badge">{workspace.category}</span>{workspace.is_demo === 1 && <span className="demo-image-label">Synthetic Demo Data · Illustrative photo</span>}
       </div>
       <div className="card-body">
         <div className="card-title-row"><h3>{workspace.name}</h3><ArrowUpRight size={19} aria-hidden="true" /></div>

@@ -4,6 +4,7 @@ import type { Workspace } from "../lib/model.ts";
 export const columns = ["id", "name", "category", "area", "address", "description", "noise_level", "wifi", "outlets", "group_friendly", "cost_band", "opening_hours", "collection_method", "source_note", "observation_ref", "source_url", "last_verified_date", "published", "is_demo"] as const;
 
 export function createSchema(database: DatabaseSync): void {
+  database.exec("PRAGMA foreign_keys = ON");
   database.exec(`CREATE TABLE IF NOT EXISTS workspaces (
     id INTEGER PRIMARY KEY CHECK(id > 0),
     name TEXT NOT NULL CHECK(length(trim(name)) > 0),
@@ -17,7 +18,24 @@ export function createSchema(database: DatabaseSync): void {
     source_note TEXT, observation_ref TEXT, source_url TEXT, last_verified_date TEXT,
     published INTEGER NOT NULL CHECK(published IN (0,1)),
     is_demo INTEGER NOT NULL DEFAULT 0 CHECK(is_demo IN (0,1))
-  ); CREATE INDEX IF NOT EXISTS workspaces_published ON workspaces(published);`);
+  ); CREATE INDEX IF NOT EXISTS workspaces_published ON workspaces(published);
+  CREATE TABLE IF NOT EXISTS noise_feedback (
+    id INTEGER PRIMARY KEY CHECK(id > 0),
+    workspace_id INTEGER NOT NULL REFERENCES workspaces(id) ON DELETE RESTRICT,
+    noise_level TEXT NOT NULL CHECK(noise_level IN ('Quiet','Moderate','Lively')),
+    observed_at TEXT NOT NULL,
+    submitted_at TEXT NOT NULL,
+    source_type TEXT NOT NULL CHECK(source_type IN ('synthetic','field_observation','user_feedback')),
+    is_synthetic INTEGER NOT NULL CHECK(is_synthetic IN (0,1)),
+    review_status TEXT NOT NULL CHECK(review_status IN ('pending','approved','rejected')),
+    source_reference TEXT,
+    CHECK((source_type = 'synthetic' AND is_synthetic = 1) OR (source_type != 'synthetic' AND is_synthetic = 0)),
+    CHECK(is_synthetic = 1 OR review_status != 'approved' OR length(trim(coalesce(source_reference,''))) > 0),
+    UNIQUE(workspace_id, observed_at, source_type)
+  );
+  CREATE INDEX IF NOT EXISTS feedback_workspace_period ON noise_feedback(workspace_id, review_status, observed_at);
+  CREATE INDEX IF NOT EXISTS feedback_observed_at ON noise_feedback(observed_at);
+  CREATE INDEX IF NOT EXISTS feedback_review_status ON noise_feedback(review_status);`);
 }
 
 export function insertWorkspace(database: DatabaseSync, workspace: Workspace): void {

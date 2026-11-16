@@ -1,0 +1,23 @@
+[
+  {
+    "id": 301,
+    "name": "Fictional Example Reading Room",
+    "category": "Library",
+    "area": "Fictional Quarter",
+    "address": "301 Fictional Lane, Imaginary City",
+    "description": "Invented workspace for software demonstration only. This is not a real venue or a collected observation.",
+    "noise_level": "Quiet",
+    "wifi": 1,
+    "outlets": 1,
+    "group_friendly": 0,
+    "cost_band": "Free",
+    "opening_hours": null,
+    "collection_method": null,
+    "source_note": "Synthetic example data. No real collection, source verification or field observation has taken place.",
+    "observation_ref": null,
+    "source_url": null,
+    "last_verified_date": null,
+    "published": 1,
+    "is_demo": 1
+  }
+]
