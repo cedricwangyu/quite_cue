@@ -9,6 +9,8 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     const workspace = getWorkspace(parseId((await context.params).id));
     return workspace ? Response.json({ workspace }, { headers: { "Cache-Control": "no-store" } }) : Response.json({ error: "Workspace not found." }, { status: 404 });
   } catch (error) {
+    // Server-side only: operators see the failure; the client still gets a generic message (FR-16 / NFR-12).
+    if (!(error instanceof InputError)) console.error("[GET /api/workspaces/[id]] catalog unavailable:", error instanceof Error ? error.message : String(error));
     return Response.json({ error: error instanceof InputError ? error.message : "Results temporarily unavailable." }, { status: error instanceof InputError ? 400 : 503 });
   }
 }

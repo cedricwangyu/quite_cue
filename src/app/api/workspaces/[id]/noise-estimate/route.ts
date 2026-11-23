@@ -29,6 +29,8 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       ? Response.json(result, { headers })
       : Response.json({ error: "Workspace not found." }, { status: 404, headers });
   } catch (error) {
+    // Server-side only: operators see the failure; the client still gets a generic message (FR-16 / NFR-12).
+    if (!(error instanceof InputError)) console.error("[GET /api/workspaces/[id]/noise-estimate] catalog unavailable:", error instanceof Error ? error.message : String(error));
     return Response.json({ error: error instanceof InputError ? "Invalid request parameters." : "Results temporarily unavailable." }, {
       status: error instanceof InputError ? 400 : 503, headers,
     });

@@ -2,7 +2,26 @@ name: Quiet Cue Checks
 on:
   push:
   pull_request:
+permissions:
+  contents: read
 jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Dependency audit (fail on high/critical)
+        run: npm audit --audit-level=high
+      - name: Semgrep SAST (fail on findings)
+        run: |
+          python3 -m pip install --quiet semgrep==1.186.0
+          semgrep scan --metrics off --error \
+            --config p/default --config p/typescript --config p/react --config p/nextjs \
+            --config p/secrets --config p/github-actions --config p/owasp-top-ten
   verify:
     strategy:
       fail-fast: false
@@ -10,8 +29,8 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
           cache: npm
@@ -23,7 +42,7 @@ jobs:
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: browser-test-results-${{ matrix.os }}
